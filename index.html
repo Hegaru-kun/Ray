@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AnaChakChat</title>
+    
+    <link rel="icon" type="image/x-icon" sizes="512x512" href="Logo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.json">
+    <link href="index.css" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Primary Action Color
+              primary: '#2563EB',
+              
+              // Backgrounds
+              'background-light': '#F9FAFB',
+              'background-dark': '#111827',
+              
+              // Surfaces (cards, bubbles, inputs)
+              'surface-light': '#FFFFFF',
+              'surface-dark': '#1F2937',
+              
+              // Text
+              'text-light': '#1F2937',
+              'text-dark': '#E2E8F0',
+              
+              // Muted / Hint
+              'muted-light': '#6B7280',
+              'muted-dark': '#9CA3AF',
+              'hint-light': '#EFF6FF',
+              'hint-dark': 'rgba(37, 99, 235, 0.1)',
+
+              // Legacy
+              secondary: '#00C48C',
+              
+              // Borders
+              'divider-light': '#E5E7EB',
+              'divider-dark': '#374151',
+            },
+            fontFamily: {
+              sans: ["-apple-system", "SF Pro Text", "Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+              khmer: ['Noto Sans Khmer', 'sans-serif'],
+            },
+            borderRadius: {
+              sm: '10px',
+              md: '14px',
+              lg: '18px',
+              xl: '22px',
+            },
+            boxShadow: {
+              'elev-1': '0 6px 20px rgba(12, 16, 24, 0.06)',
+              'elev-2': '0 10px 30px rgba(12, 16, 24, 0.08)',
+              'focus-ring': '0 0 0 3px rgba(37, 99, 235, 0.3)',
+              'inner-sm': 'inset 0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            },
+            transitionTimingFunction: {
+              'ios': 'cubic-bezier(.2, .9, .3, 1)',
+            },
+            transitionDuration: {
+              'fast': '200ms',
+              'normal': '300ms',
+              'slow': '400ms',
+            },
+            fontSize: {
+              'base': ['15px', '1.45'],
+            },
+          },
+        },
+        plugins: [],
+      }
+    </script>
+    <meta name="theme-color" content="#111827" />
+    <link rel="apple-touch-icon" href="Logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+Khmer:wght@400;700&display=swap" rel="stylesheet">
+    
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react-dom/client": "https://esm.sh/react-dom@^19.1.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@^1.7.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.525.0",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.4.168",
+    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
+    "vite": "https://esm.sh/vite@^7.0.6",
+    "path": "https://esm.sh/path@^0.12.7"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        // Construct the full URL for the service worker to ensure it's on the same origin as the page.
+        // This prevents "cross-origin" errors in certain hosting environments (like sandboxed iframes).
+        // Registering after the page is parsed but without waiting for all resources (like the 'load' event)
+        // is more resilient and avoids "invalid state" errors in some browsers/environments.
+        const swUrl = `${window.location.origin}/sw.js`;
+        navigator.serviceWorker
+          .register(swUrl)
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.error('SW registration failed:', err));
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "AnaChakChat",
+  "short_name": "AnaChak",
+  "description": "An advanced English to Khmer translator that shows its thinking process, powered by the Gemini API. This app features continuous learning within a session to handle context, idioms, and cultural nuances for more accurate and natural translations.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "Logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

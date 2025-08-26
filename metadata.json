@@ -1,0 +1,8 @@
+{
+  "name": "AnaChakChat",
+  "description": "An advanced English to Khmer translator that shows its thinking process, powered by the Gemini API. This app features continuous learning within a session to handle context, idioms, and cultural nuances for more accurate and natural translations.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
