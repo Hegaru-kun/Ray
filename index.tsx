@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Send, User, Bot, Trash2, Globe, Book, Brain, Mic, MicOff, Paperclip, X, FileText, Sparkles, Menu, Moon, Settings, LogIn, LogOut, ChevronLeft, Download, FileAudio, BrainCircuit, FileDown, ImageIcon, Wand2, Video, Pencil, Check, Ear, Music } from 'lucide-react';
+import { Send, User, Bot, Trash2, Globe, Book, Brain, Mic, MicOff, Paperclip, X, FileText, Sparkles, Menu, Moon, Settings, LogIn, LogOut, ChevronLeft, Download, FileAudio, BrainCircuit, FileDown, ImageIcon, Wand2, Video, Pencil, Check, Ear, Music, Play, Pause } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
@@ -607,6 +607,53 @@ const EmptyState = ({ onQuickReply }: { onQuickReply: (text: string) => void }) 
   );
 };
 
+// --- Start: Audio Player Component ---
+const AudioPlaybackControls = ({
+  messageId,
+  text,
+  audioPlayback,
+  onPlayAudio,
+}: {
+  messageId: string;
+  text: string;
+  audioPlayback: { messageId: string | null; isPaused: boolean; progress: number };
+  onPlayAudio: (messageId: string, text: string) => void;
+}) => {
+  const isPlayingThis = audioPlayback.messageId === messageId;
+
+  if (!isPlayingThis) {
+    return (
+      <button
+        onClick={() => onPlayAudio(messageId, text)}
+        className="p-1.5 rounded-full text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark hover:bg-hint-light dark:hover:bg-hint-dark transition-all duration-fast transform hover:scale-110"
+        aria-label="Play audio"
+      >
+        <Play strokeWidth={1.5} className="w-3.5 h-3.5" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-2 p-1 rounded-full bg-hint-light dark:bg-hint-dark">
+      <button
+        onClick={() => onPlayAudio(messageId, text)}
+        className="p-1.5 rounded-full text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark bg-surface-light/50 dark:bg-surface-dark/50 hover:bg-surface-light dark:hover:bg-surface-dark transition-all"
+        aria-label={audioPlayback.isPaused ? "Resume audio" : "Pause audio"}
+      >
+        {audioPlayback.isPaused ? <Play strokeWidth={1.5} className="w-3.5 h-3.5" /> : <Pause strokeWidth={1.5} className="w-3.5 h-3.5" />}
+      </button>
+      <div className="w-24 h-1 bg-primary/20 rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-primary transition-all duration-100" 
+          style={{ width: `${audioPlayback.progress}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+// --- End: Audio Player Component ---
+
+
 // --- Start: Voice Mode Component ---
 type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking';
 
@@ -830,6 +877,15 @@ const AdvancedKhmerAI = () => {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [editingMessage, setEditingMessage] = useState<{ index: number; text: string } | null>(null);
   const [activeImageTask, setActiveImageTask] = useState<Message | null>(null);
+
+  // --- Start: Audio Playback State ---
+  const [audioPlayback, setAudioPlayback] = useState<{
+    messageId: string | null;
+    isPaused: boolean;
+    progress: number;
+  }>({ messageId: null, isPaused: false, progress: 0 });
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  // --- End: Audio Playback State ---
 
   // --- Start: Voice Mode State ---
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -1070,6 +1126,14 @@ const AdvancedKhmerAI = () => {
         setInstallPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    // Ensure TTS voices are loaded
+    const getVoices = () => window.speechSynthesis.getVoices();
+    getVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = getVoices;
+    }
+    
     return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
   }, []);
 
@@ -1757,6 +1821,55 @@ const AdvancedKhmerAI = () => {
         console.error("Failed to update memory:", error);
     }
 };
+
+const handlePlayAudio = (messageId: string, text: string) => {
+    // If it's the same message, toggle pause/resume
+    if (audioPlayback.messageId === messageId) {
+      if (audioPlayback.isPaused) {
+        window.speechSynthesis.resume();
+        setAudioPlayback(prev => ({ ...prev, isPaused: false }));
+      } else {
+        window.speechSynthesis.pause();
+        setAudioPlayback(prev => ({ ...prev, isPaused: true }));
+      }
+      return;
+    }
+  
+    // If it's a new message, stop the old one and start the new one
+    window.speechSynthesis.cancel();
+  
+    const utterance = new SpeechSynthesisUtterance(text);
+    utteranceRef.current = utterance;
+  
+    const voices = window.speechSynthesis.getVoices();
+    const khmerVoice = voices.find(v => v.lang === 'km-KH');
+    if (khmerVoice) {
+      utterance.voice = khmerVoice;
+    }
+    utterance.pitch = 1.0;
+    utterance.rate = 1.0;
+  
+    utterance.onboundary = (event) => {
+      const progress = (event.charIndex / text.length) * 100;
+      setAudioPlayback(prev => (prev.messageId === messageId ? { ...prev, progress } : prev));
+    };
+  
+    utterance.onend = () => {
+      setAudioPlayback({ messageId: null, isPaused: false, progress: 0 });
+      utteranceRef.current = null;
+    };
+    
+    utterance.onerror = (e) => {
+      console.error("SpeechSynthesis Error:", e);
+      setAudioPlayback({ messageId: null, isPaused: false, progress: 0 });
+      utteranceRef.current = null;
+      showLocalError("Sorry, I couldn't play the audio for that message. Your browser may not support the Khmer voice.");
+    };
+  
+    setAudioPlayback({ messageId, isPaused: false, progress: 0 });
+    window.speechSynthesis.speak(utterance);
+};
+
 
 const generateImage = async (promptText: string, originalUserText?: string) => {
       if (!promptText.trim() || isGenerating || !isApiConfigured) return;
@@ -3712,7 +3825,19 @@ Extract the essential creative/search part as the prompt. For 'chat', the prompt
                         {msg.timestamp}
                         {msg.isEdited && <span className="italic opacity-80"> (edited)</span>}
                       </p>
-                      {msg.type === 'ai' && msg.status === 'complete' && <Feedback answerId={`${idx}-${msg.timestamp}`} contentToCopy={msg.content} />}
+                      {msg.type === 'ai' && msg.status === 'complete' && (
+                        <div className="flex items-center space-x-1">
+                          {msg.content.trim() && (
+                            <AudioPlaybackControls 
+                              messageId={`${idx}-${msg.timestamp}`}
+                              text={msg.content}
+                              audioPlayback={audioPlayback}
+                              onPlayAudio={handlePlayAudio}
+                            />
+                          )}
+                          <Feedback answerId={`${idx}-${msg.timestamp}`} contentToCopy={msg.content} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
